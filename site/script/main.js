@@ -31,9 +31,7 @@ const getClientX = (event) => {
   return event.clientX;
 };
 
-// ======================================================
-// HEADER
-// ======================================================
+// header + burger
 
 function initHeader() {
   const header = document.querySelector('[data-header]');
@@ -163,9 +161,7 @@ function initHeader() {
   updateHeader();
 }
 
-// ======================================================
-// HERO ANIMATION
-// ======================================================
+// hero animation
 
 function initHeroAnimation() {
   const hero = document.querySelector('.hero');
@@ -204,9 +200,7 @@ function initHeroAnimation() {
     );
 }
 
-// ======================================================
-// SECTION TWO MARQUEE
-// ======================================================
+// карсел секции два
 
 function initSectionTwoMarquee() {
   const marquee = document.querySelector('[data-section-two-marquee]');
@@ -315,28 +309,41 @@ function initSectionTwoMarquee() {
   animate();
 }
 
-// ======================================================
-// BEAUTY FLOW BACKGROUND TRANSITION
-// ======================================================
+// анимация перехода цвета
 
 function initBeautyFlowBackground() {
   const wrapper = document.querySelector('[data-beauty-flow]');
   const sectionThree = document.querySelector('.section-three');
+  const personalService = document.querySelector('.personal-service');
 
-  if (!wrapper || !sectionThree) return;
+  if (!wrapper || !sectionThree || !personalService) return;
 
-  const fromColor = [121, 96, 70]; // #796046
-  const toColor = [251, 247, 240]; // #fbf7f0
+  const beigeColor = [121, 96, 70]; // #796046
+  const whiteColor = [251, 247, 240]; // #fbf7f0
 
-  function updateBackground() {
-    const rect = sectionThree.getBoundingClientRect();
+  function getScrollProgress(element, startRatio = 0.95, endRatio = 0.25) {
+    const rect = element.getBoundingClientRect();
     const windowHeight = window.innerHeight;
 
-    const start = windowHeight * 0.95;
-    const end = windowHeight * 0.25;
+    const start = windowHeight * startRatio;
+    const end = windowHeight * endRatio;
 
-    const progress = clamp((start - rect.top) / (start - end), 0, 1);
-    const [r, g, b] = mixColor(fromColor, toColor, progress);
+    return clamp((start - rect.top) / (start - end), 0, 1);
+  }
+
+  function updateBackground() {
+    const toWhiteProgress = getScrollProgress(sectionThree, 0.95, 0.25);
+    const toBeigeProgress = getScrollProgress(personalService, 0.95, 0.25);
+
+    let currentColor;
+
+    if (toBeigeProgress > 0) {
+      currentColor = mixColor(whiteColor, beigeColor, toBeigeProgress);
+    } else {
+      currentColor = mixColor(beigeColor, whiteColor, toWhiteProgress);
+    }
+
+    const [r, g, b] = currentColor;
 
     wrapper.style.setProperty('--scene-bg', `rgb(${r}, ${g}, ${b})`);
 
@@ -346,9 +353,8 @@ function initBeautyFlowBackground() {
   updateBackground();
 }
 
-// ======================================================
-// SECTION THREE DECOR REVEAL
-// ======================================================
+// секция три декор
+
 function initSectionThreeDecorReveal() {
   const section = document.querySelector('.section-three');
   const decors = document.querySelectorAll('.section-three__decor');
@@ -367,12 +373,10 @@ function initSectionThreeDecorReveal() {
 
     const progress = clamp((start - rect.top) / (start - end), 0, 1);
 
-    // Чтобы не дергать DOM лишний раз, если прогресс почти не изменился
     if (Math.abs(progress - lastProgress) > 0.002) {
       decors.forEach((decor, index) => {
         const delay = index * 0.055;
         const localProgress = clamp((progress - delay) / (1 - delay), 0, 1);
-
         const eased = 1 - Math.pow(1 - localProgress, 3);
 
         const y = lerp(180, 0, eased);
@@ -389,13 +393,11 @@ function initSectionThreeDecorReveal() {
       lastProgress = progress;
     }
 
-    // Парение включаем только когда фотки уже почти дошли до своих мест
     if (progress > 0.98 && !isFloating) {
       section.classList.add('is-decor-floating');
       isFloating = true;
     }
 
-    // Если скроллим обратно вверх — выключаем парение и снова даём JS управлять reveal
     if (progress < 0.96 && isFloating) {
       section.classList.remove('is-decor-floating');
       isFloating = false;
